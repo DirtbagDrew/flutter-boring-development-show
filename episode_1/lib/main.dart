@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'src/article.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -34,8 +35,17 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: ListView(
-          children: _articles.map(_buildItem).toList(),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await new Future.delayed(const Duration(seconds: 1));
+            setState(() {
+              _articles.removeAt(0);
+            });
+            return;
+          },
+          child: ListView(
+            children: _articles.map(_buildItem).toList(),
+          ),
         ),
       ),
     );
@@ -44,18 +54,30 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _buildItem(Article article) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: new ListTile(
+      child: new ExpansionTile(
         title: new Text(
           article.text,
           style: new TextStyle(fontSize: 24),
         ),
-        subtitle: new Text("${article.commentsCount} comments"),
-        onTap: () async {
-          final fakeUrl = "https://${article.domain}";
-          if (await canLaunch(fakeUrl)) {
-            launch(fakeUrl);
-          }
-        },
+        children: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              new Text("${article.commentsCount} comments"),
+              new IconButton(
+                icon: new Icon(Icons.launch),
+                onPressed: () async {
+                  String url = 'https://${article.domain}';
+                  if (await canLaunch(url)) {
+                    await launch(url);
+                  } else {
+                    throw 'Could not launch $url';
+                  }
+                },
+              )
+            ],
+          ),
+        ],
       ),
     );
   }
