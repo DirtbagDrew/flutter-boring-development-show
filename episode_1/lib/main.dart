@@ -1,10 +1,18 @@
+import 'dart:collection';
+
+import 'package:episode_1/src/hn_bloc.dart';
 import 'package:flutter/material.dart';
-import 'src/article.dart';
+import 'package:episode_1/src/article.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  final hnBloc = HackerNewsBloc();
+  runApp(MyApp(bloc: hnBloc));
+}
 
 class MyApp extends StatelessWidget {
+  final HackerNewsBloc bloc;
+  MyApp({Key key, this.bloc}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -12,13 +20,17 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(
+        title: 'Flutter Hacker news',
+        bloc: bloc,
+      ),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  final HackerNewsBloc bloc;
+  MyHomePage({Key key, this.title, this.bloc}) : super(key: key);
   final String title;
 
   @override
@@ -26,8 +38,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Article> _articles = articles;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,44 +45,56 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            await new Future.delayed(const Duration(seconds: 1));
-            setState(() {
-              _articles.removeAt(0);
-            });
-            return;
-          },
-          child: ListView(
-            children: _articles.map(_buildItem).toList(),
+        child: StreamBuilder<UnmodifiableListView<Article>>(
+          stream: widget.bloc.articles,
+          initialData: UnmodifiableListView<Article>([]),
+          builder: (context, snapshot) => ListView(
+            children: snapshot.data.map(_buildItem).toList(),
           ),
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
+        items: [
+          BottomNavigationBarItem(
+              title: Text('Top stories'), icon: Icon(Icons.arrow_drop_up)),
+          BottomNavigationBarItem(
+              title: Text('New stories'), icon: Icon(Icons.new_releases)),
+        ],
+        onTap: (index) {
+          StoriesType storiesType;
+          if (index == 0) {
+            storiesType = StoriesType.topStories;
+          } else {
+            storiesType = StoriesType.newStories;
+          }
+          widget.bloc.storiesType.add(storiesType);
+        },
       ),
     );
   }
 
   Widget _buildItem(Article article) {
     return Padding(
-      key: Key(article.text),
+      key: Key(article.id.toString()),
       padding: const EdgeInsets.all(16.0),
-      child: new ExpansionTile(
-        title: new Text(
-          article.text,
-          style: new TextStyle(fontSize: 24),
+      child: ExpansionTile(
+        title: Text(
+          article.title,
+          style: TextStyle(fontSize: 24),
         ),
         children: <Widget>[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
-              new Text("${article.commentsCount} comments"),
-              new IconButton(
-                icon: new Icon(Icons.launch),
+              Text(article.type),
+              IconButton(
+                icon: Icon(Icons.launch),
                 onPressed: () async {
-                  String url = 'https://${article.domain}';
-                  if (await canLaunch(url)) {
-                    await launch(url);
+                  if (await canLaunch(article.url)) {
+                    await launch(article.url);
                   } else {
-                    throw 'Could not launch $url';
+                    throw 'Could not launch ${article.url}';
                   }
                 },
               )

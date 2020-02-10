@@ -1,5 +1,8 @@
-import 'package:episode_1/json_parsing.dart';
+import 'dart:convert';
+
+import 'package:episode_1/src/article.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http; // flutter depends on http
 
 void main() {
   test("parses top stories.json", () {
@@ -23,4 +26,24 @@ void main() {
 """;
     expect(parseArticle(jsonString).by, "dhouston");
   });
+
+  test("parses item.json over a network", () async {
+    final url = 'https://hacker-news.firebaseio.com/v0/beststories.json';
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final idList = parseTopStories(response.body);
+      if (idList.isNotEmpty) {
+        final storyUrl =
+            'https://hacker-news.firebaseio.com/v0/item/${idList.first}.json';
+        final storyResponse = await http.get(storyUrl);
+        if (storyResponse.statusCode == 200) {
+          expect(parseArticle(storyResponse.body), isNotNull);
+        } else {
+          // TODO error handling
+        }
+      }
+    } else {
+      // TODO error handling
+    }
+  }, skip: true);
 }
