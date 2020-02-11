@@ -78,6 +78,9 @@ class HackerNewsBloc {
     22280433,
   ];
 
+  Stream<bool> get isLoading => _isLoadingSubject.stream;
+  final _isLoadingSubject = BehaviorSubject<bool>.seeded(false);
+
   HackerNewsBloc() {
     _getArticlesAndUpdate(_topIds);
 
@@ -92,10 +95,11 @@ class HackerNewsBloc {
     });
   }
 
-  void _getArticlesAndUpdate(List<int> ids) {
-    _updateArticles(ids).then((_) {
-      _articlesSubject.add(UnmodifiableListView(_articles));
-    });
+  void _getArticlesAndUpdate(List<int> ids) async {
+    _isLoadingSubject.add(true);
+    await _updateArticles(ids);
+    _articlesSubject.add(UnmodifiableListView(_articles));
+    _isLoadingSubject.add(false);
   }
 
   Stream<List<Article>> get articles => _articlesSubject.stream;

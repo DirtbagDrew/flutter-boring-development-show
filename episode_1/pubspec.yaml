@@ -3,6 +3,7 @@ description: A new Flutter project.
 
 dependencies:
   url_launcher: any
+  font_awesome_flutter: any
   
   built_collection: '>=2.0.0 <5.0.0'
   built_value: ^7.0.2
