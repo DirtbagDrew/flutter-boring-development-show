@@ -26,10 +26,14 @@ class _MyAppState extends State<MyApp> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
       platformVersion = await Barometer.platformVersion;
+    } on PlatformException {
+      platformVersion = 'Failed to get platform version.';
+    }
+    try {
       final reading = await Barometer.reading;
       print('Reading is: $reading');
     } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
+      platformVersion = 'Failed to get barometer reading.';
     }
 
     // If the widget was removed from the tree while the asynchronous platform

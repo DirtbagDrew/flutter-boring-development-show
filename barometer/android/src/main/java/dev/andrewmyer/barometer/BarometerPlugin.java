@@ -7,6 +7,8 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
+import android.hardware.Sensor;
+import android.hardware.SensorManger;
 
 /** BarometerPlugin */
 public class BarometerPlugin implements FlutterPlugin, MethodCallHandler {
@@ -25,13 +27,20 @@ public class BarometerPlugin implements FlutterPlugin, MethodCallHandler {
   // them functionally equivalent. Only one of onAttachedToEngine or registerWith will be called
   // depending on the user's project. onAttachedToEngine or registerWith must both be defined
   // in the same class.
+  
+  private SensorManager mSensorManager;
+  private Sensor mAccelerometer;
+
   double getBarometer(){
-    return 79.0;
+   mSensorManager=(SensorManager)getSystemService(SENSOR_SERVICE);
+   mAccelerometer=mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
+    // return 79.0;
   }
   
   public static void registerWith(Registrar registrar) {
     final MethodChannel channel = new MethodChannel(registrar.messenger(), "barometer");
     channel.setMethodCallHandler(new BarometerPlugin());
+    
   }
 
   @Override
