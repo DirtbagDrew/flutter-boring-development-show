@@ -14,4 +14,8 @@ class Barometer {
     final double reading = await _channel.invokeMethod('getBarometer');
     return reading;
   }
+
+  static void intitialize() async {
+    await _channel.invokeListMethod('initializeBarometer');
+  }
 }

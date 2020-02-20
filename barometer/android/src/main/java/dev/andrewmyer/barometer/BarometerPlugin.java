@@ -8,38 +8,31 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 import android.hardware.Sensor;
-import android.hardware.SensorManger;
+import android.hardware.SensorManager;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+
+import static android.content.Context.SENSOR_SERVICE;
 
 /** BarometerPlugin */
-public class BarometerPlugin implements FlutterPlugin, MethodCallHandler {
-  @Override
-  public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-    final MethodChannel channel = new MethodChannel(flutterPluginBinding.getFlutterEngine().getDartExecutor(), "barometer");
-    channel.setMethodCallHandler(new BarometerPlugin());
-  }
-
-  // This static function is optional and equivalent to onAttachedToEngine. It supports the old
-  // pre-Flutter-1.12 Android projects. You are encouraged to continue supporting
-  // plugin registration via this function while apps migrate to use the new Android APIs
-  // post-flutter-1.12 via https://flutter.dev/go/android-project-migration.
-  //
-  // It is encouraged to share logic between onAttachedToEngine and registerWith to keep
-  // them functionally equivalent. Only one of onAttachedToEngine or registerWith will be called
-  // depending on the user's project. onAttachedToEngine or registerWith must both be defined
-  // in the same class.
-  
+public class BarometerPlugin implements MethodCallHandler, SensorEventListener {
   private SensorManager mSensorManager;
-  private Sensor mAccelerometer;
+  private Sensor mBarometer;
+  private Registrar mRegistrar;
+  private float mLatestReading = 0;
 
   double getBarometer(){
-   mSensorManager=(SensorManager)getSystemService(SENSOR_SERVICE);
-   mAccelerometer=mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
-    // return 79.0;
+
+    return 79.0;
+  }
+
+  BarometerPlugin(Registrar registrar){
+    mRegistrar=registrar;
   }
   
   public static void registerWith(Registrar registrar) {
     final MethodChannel channel = new MethodChannel(registrar.messenger(), "barometer");
-    channel.setMethodCallHandler(new BarometerPlugin());
+    channel.setMethodCallHandler(new BarometerPlugin(registrar));
     
   }
 
@@ -48,15 +41,24 @@ public class BarometerPlugin implements FlutterPlugin, MethodCallHandler {
     if (call.method.equals("getPlatformVersion")) {
       result.success("Android " + android.os.Build.VERSION.RELEASE);
     return;
-    } else if(call.method.equals("getBarometer")) {
+    }  if(call.method.equals("getBarometer")) {
       double reading =getBarometer();
       result.success(reading);
       return;    
+    } if(call.method.equals("intitializeBarometer")){
+      result.success(initializeBarometer());
+      return;
     }
     result.notImplemented();
   }
 
   @Override
-  public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
+  public void onAccuracyChanged(Sensor sensor, int accuracy){
+
+  }
+
+  @Override
+  public void onSensorChange(SensorEvent event){
+    mLatestReading++;
   }
 }
