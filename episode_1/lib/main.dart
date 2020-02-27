@@ -14,13 +14,23 @@ void main() {
 class MyApp extends StatelessWidget {
   final HackerNewsBloc bloc;
   MyApp({Key key, this.bloc}) : super(key: key);
+
+  static const primaryColor = Colors.white;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.deepOrange,
-      ),
+          textTheme: Theme.of(context).textTheme.copyWith(
+                caption: TextStyle(color: Colors.white54),
+                subhead: TextStyle(
+                  fontFamily: 'PressStart',
+                ),
+              ),
+          scaffoldBackgroundColor: primaryColor,
+          primaryColor: primaryColor,
+          canvasColor: Colors.black),
       home: MyHomePage(
         title: 'Flutter Hacker news',
         bloc: bloc,
@@ -44,7 +54,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        elevation: 0,
+        // title: Text(widget.title),
         leading: LoadingInfo(widget.bloc.isLoading),
       ),
       body: Center(
@@ -57,6 +68,8 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        // backgroundColor: Colors.amber,
+        // fixedColor: ThemeData().primaryColor,
         currentIndex: _currentIndex,
         items: [
           BottomNavigationBarItem(
@@ -83,28 +96,34 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _buildItem(Article article) {
     return Padding(
       key: Key(article.id.toString()),
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 12),
       child: ExpansionTile(
         title: Text(
           article.title,
           style: TextStyle(fontSize: 24),
         ),
         children: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: <Widget>[
-              Text('${article.descendants} comments'),
-              IconButton(
-                icon: Icon(Icons.launch),
-                onPressed: () async {
-                  if (await canLaunch(article.url)) {
-                    await launch(article.url);
-                  } else {
-                    throw 'Could not launch ${article.url}';
-                  }
-                },
-              )
-            ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Text('${article.descendants} comments'),
+                SizedBox(
+                  width: 16,
+                ),
+                IconButton(
+                  icon: Icon(Icons.launch),
+                  onPressed: () async {
+                    if (await canLaunch(article.url)) {
+                      await launch(article.url);
+                    } else {
+                      throw 'Could not launch ${article.url}';
+                    }
+                  },
+                )
+              ],
+            ),
           ),
         ],
       ),
@@ -136,20 +155,23 @@ class LoadingInfoState extends State<LoadingInfo>
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: widget._isLoading,
-      builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-        // if (snapshot.hasData && snapshot.data) {
-        _controller.forward().then((f) => _controller.reverse());
+      builder: (BuildContext context, AsyncSnapshot<bool> loading) {
+        if (loading.hasData && loading.data) {
+          _controller.forward().then((f) => _controller.reverse());
 
-        return FadeTransition(
-          child: Icon(
-            FontAwesomeIcons.hackerNewsSquare,
-            color: Colors.white,
-          ),
-          opacity: Tween(begin: 0.5, end: 1.0).animate(
-              CurvedAnimation(curve: Curves.easeIn, parent: _controller)),
+          return FadeTransition(
+            child: Icon(
+              FontAwesomeIcons.hackerNewsSquare,
+              color: Colors.black,
+            ),
+            opacity: Tween(begin: 0.5, end: 1.0).animate(
+                CurvedAnimation(curve: Curves.easeIn, parent: _controller)),
+          );
+        }
+        return Icon(
+          FontAwesomeIcons.hackerNewsSquare,
+          color: Colors.black,
         );
-        // }
-        // return Container();
       },
     );
   }
