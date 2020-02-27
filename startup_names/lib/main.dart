@@ -69,6 +69,13 @@ class _MyHomePageState extends State<MyHomePage> {
             expandedHeight: 200,
             title: Text('hello'),
           ),
+          SliverFilip(
+            child: Container(
+              color: Colors.red,
+              child: Text('hi'),
+              height: 150,
+            ),
+          ),
           SliverPadding(
             padding: const EdgeInsets.all(8.0),
             sliver: SliverList(
@@ -111,10 +118,52 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class SliverFilip extends RenderSliver{
+class SliverFilip extends SingleChildRenderObjectWidget {
+  SliverFilip({Widget child, Key key}) : super(child: child, key: key);
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return RenderSliverFilip();
+  }
+}
+
+class RenderSliverFilip extends RenderSliverSingleBoxAdapter {
+  RenderSliverFilip({
+    RenderBox child,
+  }) : super(child: child);
+
   @override
   void performLayout() {
-    // TODO: implement performLayout
+    if (child == null) {
+      geometry = SliverGeometry.zero;
+      return;
+    }
+    child.layout(constraints.asBoxConstraints(), parentUsesSize: true);
+    double childExtent;
+    switch (constraints.axis) {
+      case Axis.horizontal:
+        childExtent = child.size.width;
+        break;
+      case Axis.vertical:
+        childExtent = child.size.height;
+        break;
+    }
+    assert(childExtent != null);
+    final double paintedChildSize =
+        calculatePaintOffset(constraints, from: 0.0, to: childExtent);
+    final double cacheExtent =
+        calculateCacheOffset(constraints, from: 0.0, to: childExtent);
+
+    assert(paintedChildSize.isFinite);
+    assert(paintedChildSize >= 0.0);
+
+    final isOdd = constraints.scrollOffset.toInt().isOdd;
+
+    geometry = SliverGeometry(
+        scrollExtent: 50,
+        paintExtent: 50,
+        maxPaintExtent: 50,
+        paintOrigin: constraints.scrollOffset * 2);
+    setChildParentData(child, constraints, geometry);
   }
-  
 }
